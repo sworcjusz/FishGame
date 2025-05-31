@@ -1,0 +1,200 @@
+/**
+ * CSS Custom Properties (Variables)
+ * Mobile-First Fish Game Design System
+ * Optimized for touch interfaces and performance
+ */
+
+:root {
+  /* === COLORS === */
+  /* Primary game colors - ocean theme */
+  --color-primary: #2196f3; /* Ocean blue */
+  --color-primary-dark: #1976d2; /* Deep ocean */
+  --color-primary-light: #bbdefb; /* Light water */
+
+  /* Secondary colors - fish theme */
+  --color-secondary: #ff9800; /* Fish orange */
+  --color-secondary-dark: #f57c00;
+  --color-secondary-light: #ffe0b2;
+
+  /* UI colors */
+  --color-success: #4caf50; /* Catch success */
+  --color-warning: #ffc107; /* Warning states */
+  --color-error: #f44336; /* Error states */
+  --color-info: #00bcd4; /* Info messages */
+
+  /* Neutral colors */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-gray-100: #f5f5f5;
+  --color-gray-200: #eeeeee;
+  --color-gray-300: #e0e0e0;
+  --color-gray-400: #bdbdbd;
+  --color-gray-500: #9e9e9e;
+  --color-gray-600: #757575;
+  --color-gray-700: #616161;
+  --color-gray-800: #424242;
+  --color-gray-900: #212121;
+
+  /* Game-specific colors */
+  --color-water: linear-gradient(180deg, #87ceeb 0%, #4682b4 100%);
+  --color-sand: #f4a460;
+  --color-fish-1: #ffd700; /* Golden fish */
+  --color-fish-2: #ff6347; /* Red fish */
+  --color-fish-3: #32cd32; /* Green fish */
+  --color-hook: #c0c0c0; /* Silver hook */
+  --color-line: #8b4513; /* Brown fishing line */
+
+  /* === TYPOGRAPHY === */
+  /* Font families */
+  --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+
+  /* Font sizes - mobile first (rem units) */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.25rem; /* 20px */
+  --font-size-2xl: 1.5rem; /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-4xl: 2.25rem; /* 36px */
+
+  /* Font weights */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Line heights */
+  --line-height-tight: 1.25;
+  --line-height-snug: 1.375;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+
+  /* === SPACING === */
+  /* Spacing scale (rem units) */
+  --space-0: 0;
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-8: 2rem; /* 32px */
+  --space-10: 2.5rem; /* 40px */
+  --space-12: 3rem; /* 48px */
+  --space-16: 4rem; /* 64px */
+  --space-20: 5rem; /* 80px */
+
+  /* === SIZES === */
+  /* Touch target sizes (minimum 44px for accessibility) */
+  --touch-target-min: 2.75rem; /* 44px */
+  --touch-target-large: 3.5rem; /* 56px */
+
+  /* Game canvas sizes */
+  --canvas-min-width: 320px;
+  --canvas-max-width: 480px;
+  --canvas-ratio: 9/16; /* Mobile portrait ratio */
+
+  /* UI component sizes */
+  --button-height-sm: 2rem; /* 32px */
+  --button-height-md: 2.5rem; /* 40px */
+  --button-height-lg: 3rem; /* 48px */
+
+  /* === BORDERS === */
+  --border-width-thin: 1px;
+  --border-width-thick: 2px;
+  --border-radius-none: 0;
+  --border-radius-sm: 0.125rem; /* 2px */
+  --border-radius-md: 0.375rem; /* 6px */
+  --border-radius-lg: 0.5rem; /* 8px */
+  --border-radius-xl: 0.75rem; /* 12px */
+  --border-radius-full: 9999px;
+
+  /* === SHADOWS === */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* === ANIMATIONS === */
+  /* Timing functions */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Duration */
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+
+  /* === Z-INDEX SCALE === */
+  --z-index-dropdown: 1000;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+  --z-index-toast: 1080;
+
+  /* === MOBILE OPTIMIZATIONS === */
+  /* Safe areas for notched devices */
+  --safe-area-inset-top: env(safe-area-inset-top, 0);
+  --safe-area-inset-right: env(safe-area-inset-right, 0);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0);
+  --safe-area-inset-left: env(safe-area-inset-left, 0);
+
+  /* Performance optimizations */
+  --will-change-transform: transform;
+  --will-change-opacity: opacity;
+  --will-change-scroll: scroll-position;
+
+  /* === GAME SPECIFIC === */
+  /* Animation speeds for game elements */
+  --fish-swim-speed: 2s;
+  --hook-cast-speed: 0.8s;
+  --water-ripple-speed: 1.5s;
+
+  /* Physics values */
+  --gravity: 9.81;
+  --water-resistance: 0.98;
+  --fish-speed-multiplier: 1;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary: #64b5f6;
+    --color-primary-dark: #42a5f5;
+    --color-gray-100: #1a1a1a;
+    --color-gray-200: #2d2d2d;
+    --color-gray-300: #404040;
+    --color-gray-800: #e0e0e0;
+    --color-gray-900: #ffffff;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --color-primary: #0066cc;
+    --color-secondary: #ff6600;
+    --border-width-thin: 2px;
+    --border-width-thick: 3px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
+    --fish-swim-speed: 0ms;
+    --hook-cast-speed: 0ms;
+    --water-ripple-speed: 0ms;
+  }
+}

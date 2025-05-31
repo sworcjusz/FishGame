@@ -17,30 +17,48 @@ class FishGameApp {
    */
   init(container = '#fish-game-container') {
     try {
-      const gameContainer = typeof container === 'string' 
-        ? document.querySelector(container) 
-        : container;
+      const gameContainer = this._getGameContainer(container);
 
-      if (!gameContainer) {
-        throw new Error(`Game container not found: ${container}`);
-      }
-
-      // Check for required browser features
       if (!this.checkBrowserSupport()) {
         this.showUnsupportedBrowserMessage(gameContainer);
         return;
       }
 
-      // Initialize the game
-      this.game = new Game(gameContainer);
-      this.game.init();
-      this.initialized = true;
-
-      console.log('🐟 Tiny Fish Catch game initialized successfully!');
+      this._initializeGame(gameContainer);
     } catch (error) {
       console.error('Failed to initialize fish game:', error);
       this.showErrorMessage(container, error.message);
     }
+  }
+
+  /**
+   * Get game container element
+   * @param {HTMLElement|string} container - Container element or selector
+   * @returns {HTMLElement} Game container element
+   * @private
+   */
+  _getGameContainer(container) {
+    const gameContainer =
+      typeof container === 'string'
+        ? document.querySelector(container)
+        : container;
+
+    if (!gameContainer) {
+      throw new Error(`Game container not found: ${container}`);
+    }
+
+    return gameContainer;
+  }
+
+  /**
+   * Initialize the game instance
+   * @param {HTMLElement} gameContainer - Game container element
+   * @private
+   */
+  _initializeGame(gameContainer) {
+    this.game = new Game(gameContainer);
+    this.game.init();
+    this.initialized = true;
   }
 
   /**
@@ -54,9 +72,6 @@ class FishGameApp {
       return false;
     }
 
-    // Check for touch events (mobile devices)
-    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    
     // Check for requestAnimationFrame
     if (!window.requestAnimationFrame) {
       return false;
@@ -85,9 +100,10 @@ class FishGameApp {
    * @param {string} message - Error message
    */
   showErrorMessage(container, message) {
-    const gameContainer = typeof container === 'string' 
-      ? document.querySelector(container) 
-      : container;
+    const gameContainer =
+      typeof container === 'string'
+        ? document.querySelector(container)
+        : container;
 
     if (gameContainer) {
       gameContainer.innerHTML = `
@@ -119,11 +135,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (container) {
     const app = new FishGameApp();
     app.init(container);
-    
+
     // Make app available globally for WordPress shortcode
     window.FishGameApp = app;
   }
 });
 
 // Export for manual initialization (WordPress shortcode)
-export default FishGameApp; 
+export default FishGameApp;

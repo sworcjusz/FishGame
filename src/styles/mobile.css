@@ -1,0 +1,366 @@
+/**
+ * Mobile-First CSS Optimizations
+ * Touch interface and performance optimizations
+ * For Fish Game mobile experience
+ */
+
+/* === MOBILE RESET & BASE === */
+
+/* Prevent zoom on input focus (mobile Safari) */
+input,
+select,
+textarea,
+button {
+  font-size: var(--font-size-base);
+}
+
+/* Prevent horizontal scrolling */
+html,
+body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Optimize touch scrolling */
+body {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* === TOUCH OPTIMIZATIONS === */
+
+/* Remove touch highlights and delays */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Touch targets - minimum 44px for accessibility */
+.touch-target {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.touch-target-large {
+  min-height: var(--touch-target-large);
+  min-width: var(--touch-target-large);
+}
+
+/* Touch feedback */
+.touch-feedback {
+  transition: transform var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-out);
+}
+
+.touch-feedback:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+/* === GAME CANVAS MOBILE OPTIMIZATIONS === */
+
+.fish-game-container {
+  /* Full viewport on mobile */
+  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+
+  /* Safe area handling for notched devices */
+  padding-top: var(--safe-area-inset-top);
+  padding-right: var(--safe-area-inset-right);
+  padding-bottom: var(--safe-area-inset-bottom);
+  padding-left: var(--safe-area-inset-left);
+
+  /* Prevent scrolling */
+  overflow: hidden;
+
+  /* Performance optimizations */
+  will-change: var(--will-change-transform);
+  transform: translateZ(0); /* Force hardware acceleration */
+
+  /* Center content */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  /* Background */
+  background: var(--color-water);
+  background-attachment: fixed;
+}
+
+/* Game canvas responsive sizing */
+.fish-game-canvas {
+  /* Responsive canvas sizing */
+  width: 100%;
+  max-width: var(--canvas-max-width);
+  height: auto;
+  aspect-ratio: var(--canvas-ratio);
+
+  /* Performance optimizations */
+  will-change: var(--will-change-transform);
+  transform: translateZ(0);
+
+  /* Touch handling */
+  touch-action: none; /* Prevent default touch behaviors */
+  pointer-events: auto;
+
+  /* Anti-aliasing for crisp graphics */
+  image-rendering: crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+
+  /* Border for visual feedback */
+  border: var(--border-width-thin) solid var(--color-primary-dark);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+/* === MOBILE UI COMPONENTS === */
+
+/* Loading screen */
+.fish-game-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: var(--color-white);
+  font-family: var(--font-primary);
+}
+
+.fish-game-loading-spinner {
+  font-size: var(--font-size-4xl);
+  animation: bob var(--fish-swim-speed) ease-in-out infinite;
+  margin-bottom: var(--space-4);
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Error states */
+.fish-game-error {
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--color-white);
+  font-family: var(--font-primary);
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: var(--border-radius-lg);
+  margin: var(--space-4);
+  max-width: 400px;
+}
+
+.fish-game-error h3 {
+  margin: 0 0 var(--space-4) 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+}
+
+.fish-game-error p {
+  margin: 0 0 var(--space-3) 0;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+}
+
+.fish-game-error button {
+  background: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.fish-game-error button:hover,
+.fish-game-error button:focus {
+  background: var(--color-primary-dark);
+  outline: 2px solid var(--color-white);
+  outline-offset: 2px;
+}
+
+/* === GAME UI OVERLAY === */
+
+.fish-game-ui {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none; /* Allow touches to pass through to canvas */
+  z-index: 10;
+}
+
+.fish-game-ui > * {
+  pointer-events: auto; /* Re-enable for specific UI elements */
+}
+
+/* Score display */
+.fish-game-score {
+  position: absolute;
+  top: var(--safe-area-inset-top, var(--space-4));
+  right: var(--space-4);
+  background: rgba(0, 0, 0, 0.8);
+  color: var(--color-white);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--border-radius-full);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Game controls */
+.fish-game-controls {
+  position: absolute;
+  bottom: calc(var(--safe-area-inset-bottom, 0px) + var(--space-4));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--space-4);
+}
+
+.fish-game-button {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: var(--border-radius-full);
+  padding: var(--space-3);
+  min-height: var(--touch-target-large);
+  min-width: var(--touch-target-large);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: transform var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+.fish-game-button:active {
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.fish-game-button:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* === ORIENTATION HANDLING === */
+
+/* Landscape mode adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+  .fish-game-container {
+    padding: var(--space-2);
+  }
+
+  .fish-game-canvas {
+    max-height: 90vh;
+    aspect-ratio: 16/9; /* Landscape ratio */
+  }
+
+  .fish-game-score {
+    top: var(--space-2);
+    right: var(--space-2);
+    font-size: var(--font-size-base);
+  }
+
+  .fish-game-controls {
+    bottom: var(--space-2);
+  }
+}
+
+/* === PERFORMANCE OPTIMIZATIONS === */
+
+/* Reduce animations on low-performance devices */
+@media (prefers-reduced-motion: reduce) {
+  .fish-game-loading-spinner {
+    animation: none;
+  }
+
+  .touch-feedback,
+  .fish-game-button {
+    transition: none;
+  }
+}
+
+/* High DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .fish-game-canvas {
+    image-rendering: auto;
+  }
+}
+
+/* === ACCESSIBILITY IMPROVEMENTS === */
+
+/* Focus management for keyboard navigation */
+.fish-game-container:focus-within .fish-game-ui {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .fish-game-error {
+    border: var(--border-width-thick) solid var(--color-white);
+  }
+
+  .fish-game-score {
+    border: var(--border-width-thin) solid var(--color-white);
+  }
+
+  .fish-game-button {
+    border: var(--border-width-thin) solid var(--color-black);
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .fish-game-error {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-white);
+  }
+
+  .fish-game-button {
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--color-white);
+  }
+}
+
+/* === VIRTUAL KEYBOARD HANDLING === */
+
+/* Adjust layout when virtual keyboard is visible */
+@media (max-height: 500px) {
+  .fish-game-container {
+    height: 100vh;
+    height: -webkit-fill-available; /* iOS Safari fix */
+  }
+}
+
+/* === NOTCH AND SAFE AREA SUPPORT === */
+
+/* Additional padding for devices with notches */
+@supports (padding: max(0px)) {
+  .fish-game-container {
+    padding-left: max(var(--space-4), var(--safe-area-inset-left));
+    padding-right: max(var(--space-4), var(--safe-area-inset-right));
+  }
+}
