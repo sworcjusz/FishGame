@@ -1,0 +1,1 @@
+console.log('Testing canvas click...'); document.querySelector('#gameCanvas').addEventListener('click', (e) => { console.log('Canvas clicked at:', e.offsetX, e.offsetY); window.FishGameApp.game.player.castHook(e.offsetX, e.offsetY); });

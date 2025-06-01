@@ -273,9 +273,9 @@ export class Player {
     const tensionRatio = this.lineLength / this.maxLineLength;
     this.lineTension = MathUtils.clamp(tensionRatio, 0, 1);
     
-    // Apply tension effects
-    if (this.lineTension > 0.8) {
-      const tensionForce = (this.lineTension - 0.8) * 0.5;
+    // Apply tension effects - REDUCED: less aggressive tension
+    if (this.lineTension > 0.95) { // Changed from 0.8 to 0.95
+      const tensionForce = (this.lineTension - 0.95) * 0.2; // Changed from 0.5 to 0.2
       const directionToPlayer = Math.atan2(
         this.y - this.hookY,
         this.x - this.hookX

@@ -56,8 +56,64 @@ class FishGameApp {
    * @private
    */
   _initializeGame(gameContainer) {
-    this.game = new Game(gameContainer);
-    this.game.init();
+    // Clear container (remove loading screen)
+    gameContainer.innerHTML = '';
+    
+    // Create canvas element
+    const canvas = document.createElement('canvas');
+    canvas.id = 'gameCanvas';
+    canvas.style.width = '100%';
+    canvas.style.height = '100vh';
+    canvas.style.maxHeight = '667px';
+    canvas.style.display = 'block';
+    canvas.style.margin = '0 auto';
+    canvas.style.backgroundColor = '#87CEEB'; // Sky blue water background
+    gameContainer.appendChild(canvas);
+
+    // Create simple start menu overlay
+    const menuOverlay = document.createElement('div');
+    menuOverlay.id = 'game-menu';
+    menuOverlay.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: white;
+      font-family: Arial, sans-serif;
+      z-index: 10;
+    `;
+    menuOverlay.innerHTML = `
+      <h1 style="font-size: 2em; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🐟 Tiny Fish Catch</h1>
+      <button id="startGameBtn" style="
+        font-size: 1.2em; 
+        padding: 15px 30px; 
+        background: #4CAF50; 
+        color: white; 
+        border: none; 
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 10px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        min-height: 44px;
+        min-width: 120px;">
+        🎣 Zacznij grę
+      </button>
+    `;
+    gameContainer.appendChild(menuOverlay);
+
+    // Initialize game with proper options
+    this.game = new Game({ 
+      canvasId: 'gameCanvas'
+    });
+    
+    // Setup start button functionality
+    const startBtn = document.getElementById('startGameBtn');
+    startBtn.addEventListener('click', () => {
+      menuOverlay.style.display = 'none';
+      this.game.start();
+    });
+    
     this.initialized = true;
   }
 
@@ -131,15 +187,35 @@ class FishGameApp {
 
 // Auto-initialize if container exists
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOMContentLoaded fired - initializing fish game');
   const container = document.querySelector('#fish-game-container');
   if (container) {
+    console.log('Fish game container found, initializing...');
     const app = new FishGameApp();
     app.init(container);
 
     // Make app available globally for WordPress shortcode
     window.FishGameApp = app;
+  } else {
+    console.error('Fish game container #fish-game-container not found!');
   }
 });
+
+// Fallback if DOM is already loaded
+if (document.readyState === 'loading') {
+  console.log('DOM is still loading, waiting for DOMContentLoaded');
+} else {
+  console.log('DOM already loaded, initializing immediately');
+  const container = document.querySelector('#fish-game-container');
+  if (container) {
+    console.log('Fish game container found (immediate init)');
+    const app = new FishGameApp();
+    app.init(container);
+    window.FishGameApp = app;
+  } else {
+    console.error('Fish game container #fish-game-container not found (immediate init)!');
+  }
+}
 
 // Export for manual initialization (WordPress shortcode)
 export default FishGameApp;

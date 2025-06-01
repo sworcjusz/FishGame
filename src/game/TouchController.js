@@ -77,6 +77,13 @@ export class TouchController {
     // Event system
     this.eventListeners = {};
     
+    // Mouse support for desktop
+    this.mouseDown = false;
+    this.mouseTouch = null;
+    
+    // Timers for cleanup
+    this.orientationTimer = null;
+    
     // Initialize touch pool
     this._initializeTouchPool();
     
@@ -227,6 +234,12 @@ export class TouchController {
     this.canvas.addEventListener('touchmove', this._handleTouchMove.bind(this), options);
     this.canvas.addEventListener('touchend', this._handleTouchEnd.bind(this), options);
     this.canvas.addEventListener('touchcancel', this._handleTouchCancel.bind(this), options);
+    
+    // Mouse support for desktop
+    this.canvas.addEventListener('mousedown', this._handleMouseDown.bind(this), options);
+    this.canvas.addEventListener('mousemove', this._handleMouseMove.bind(this), options);
+    this.canvas.addEventListener('mouseup', this._handleMouseUp.bind(this), options);
+    this.canvas.addEventListener('mouseleave', this._handleMouseUp.bind(this), options);
     
     // Orientation change handling
     if (typeof window !== 'undefined') {
@@ -524,17 +537,23 @@ export class TouchController {
   }
 
   /**
-   * Setup long press detection
+   * Setup long press detection for touch
    * @param {Object} touchObj - Touch object
    * @private
    */
   _setupLongPressDetection(touchObj) {
-    setTimeout(() => {
+    // Clear any existing timer for this touch
+    if (touchObj.gestureData.longPressTimer) {
+      clearTimeout(touchObj.gestureData.longPressTimer);
+    }
+    
+    touchObj.gestureData.longPressTimer = setTimeout(() => {
       if (touchObj.isActive && 
           this.activeTouches.has(touchObj.id) &&
           Math.sqrt(touchObj.deltaX ** 2 + touchObj.deltaY ** 2) < this.gestureThreshold) {
         this._handleLongPress({ x: touchObj.currentX, y: touchObj.currentY });
       }
+      touchObj.gestureData.longPressTimer = null;
     }, this.longPressDelay);
   }
 
@@ -595,17 +614,18 @@ export class TouchController {
 
   /**
    * Handle game-specific tap actions
-   * @param {Object} position - Tap position
+   * @param {Object} position - Touch position
    * @private
    */
   _handleGameTap(position) {
     if (this.currentMode !== 'fishing' || !this.player) return;
     
+    // TEMP DISABLE: Auto-reeling on tap - let player control when to reel
     // If player is casting, tap starts reeling
-    if (this.player.isCasting && this.isInReelingZone(position.x, position.y)) {
-      this.player.handleTouchReel();
-      return;
-    }
+    // if (this.player.isCasting && this.isInReelingZone(position.x, position.y)) {
+    //   this.player.handleTouchReel();
+    //   return;
+    // }
   }
 
   /**
@@ -706,12 +726,18 @@ export class TouchController {
    * @private
    */
   _handleOrientationChange() {
-    setTimeout(() => {
+    // Clear any existing orientation timer
+    if (this.orientationTimer) {
+      clearTimeout(this.orientationTimer);
+    }
+    
+    this.orientationTimer = setTimeout(() => {
       this.orientation = this._getOrientation();
       this._updateCanvasProperties();
       this.touchZones = this._initializeTouchZones();
       
       this._emit('orientationChange', { orientation: this.orientation });
+      this.orientationTimer = null;
     }, 100); // Delay to ensure layout update
   }
 
@@ -790,32 +816,38 @@ export class TouchController {
   /**
    * Set gesture threshold
    * @param {number} threshold - Gesture threshold
+   * @returns {TouchController} This instance for chaining
    */
   setGestureThreshold(threshold) {
     if (threshold <= 0) {
       throw new Error('Gesture threshold must be positive');
     }
     this.gestureThreshold = threshold;
+    return this;
   }
 
   /**
    * Set touch sensitivity
    * @param {number} sensitivity - Touch sensitivity
+   * @returns {TouchController} This instance for chaining
    */
   setSensitivity(sensitivity) {
     if (sensitivity < 0) {
       throw new Error('Touch sensitivity must be non-negative');
     }
     this.touchSensitivity = sensitivity;
+    return this;
   }
 
   /**
    * Add custom gesture handler
    * @param {string} name - Gesture name
    * @param {Function} handler - Gesture handler
+   * @returns {TouchController} This instance for chaining
    */
   addCustomGesture(name, handler) {
     this.customGestures[name] = handler;
+    return this;
   }
 
   // ===============================
@@ -879,26 +911,30 @@ export class TouchController {
    * Add event listener
    * @param {string} event - Event name
    * @param {Function} callback - Callback function
+   * @returns {TouchController} This instance for chaining
    */
   on(event, callback) {
     if (!this.eventListeners[event]) {
       this.eventListeners[event] = [];
     }
     this.eventListeners[event].push(callback);
+    return this;
   }
 
   /**
    * Remove event listener
    * @param {string} event - Event name
    * @param {Function} callback - Callback function
+   * @returns {TouchController} This instance for chaining
    */
   off(event, callback) {
-    if (!this.eventListeners[event]) return;
+    if (!this.eventListeners[event]) return this;
     
     const index = this.eventListeners[event].indexOf(callback);
     if (index > -1) {
       this.eventListeners[event].splice(index, 1);
     }
+    return this;
   }
 
   /**
@@ -920,6 +956,259 @@ export class TouchController {
   }
 
   // ===============================
+  // MOUSE EVENT HANDLERS (Desktop Support)
+  // ===============================
+
+  /**
+   * Handle mouse down event - simulate touch start
+   * @param {MouseEvent} event Mouse down event
+   * @private
+   */
+  _handleMouseDown(event) {
+    if (!this.isEnabled || this.destroyed) return;
+    
+    event.preventDefault();
+    
+    // Skip if touch events are active (hybrid devices)
+    if (this.activeTouches.size > 0) return;
+    
+    this.mouseDown = true;
+    
+    // Create simulated touch from mouse
+    const mouseTouch = this._createMouseTouch(event);
+    if (!mouseTouch) return;
+    
+    this.mouseTouch = mouseTouch;
+    this.activeTouches.set('mouse', mouseTouch);
+    
+    // Process as touch start
+    this._processMouseAsTouch(mouseTouch, 'start');
+  }
+
+  /**
+   * Handle mouse move event - simulate touch move
+   * @param {MouseEvent} event Mouse move event
+   * @private
+   */
+  _handleMouseMove(event) {
+    if (!this.isEnabled || this.destroyed || !this.mouseDown || !this.mouseTouch) return;
+    
+    event.preventDefault();
+    
+    // Throttle for performance
+    const currentTime = performance.now();
+    if (this.moveThrottle && currentTime - this.lastMoveTime < this.throttleInterval) {
+      return;
+    }
+    this.lastMoveTime = currentTime;
+    
+    // Update mouse touch coordinates
+    const coordinates = this._getMouseCoordinates(event);
+    if (!coordinates) return;
+    
+    this.mouseTouch.previousX = this.mouseTouch.currentX;
+    this.mouseTouch.previousY = this.mouseTouch.currentY;
+    this.mouseTouch.currentX = coordinates.x;
+    this.mouseTouch.currentY = coordinates.y;
+    this.mouseTouch.deltaX = this.mouseTouch.currentX - this.mouseTouch.previousX;
+    this.mouseTouch.deltaY = this.mouseTouch.currentY - this.mouseTouch.previousY;
+    this.mouseTouch.lastMoveTime = currentTime;
+    
+    // Process as touch move
+    this._processMouseAsTouch(this.mouseTouch, 'move');
+  }
+
+  /**
+   * Handle mouse up/leave event - simulate touch end
+   * @param {MouseEvent} event Mouse up/leave event
+   * @private
+   */
+  _handleMouseUp(event) {
+    if (!this.isEnabled || this.destroyed || !this.mouseDown || !this.mouseTouch) return;
+    
+    event.preventDefault();
+    
+    this.mouseDown = false;
+    
+    // Process as touch end
+    this._processMouseAsTouch(this.mouseTouch, 'end');
+    
+    // Clean up mouse touch
+    this.activeTouches.delete('mouse');
+    this._returnTouchToPool(this.mouseTouch);
+    this.mouseTouch = null;
+  }
+
+  /**
+   * Create simulated touch object from mouse event
+   * @param {MouseEvent} event Mouse event
+   * @returns {Object|null} Touch object or null if failed
+   * @private
+   */
+  _createMouseTouch(event) {
+    const coordinates = this._getMouseCoordinates(event);
+    if (!coordinates) return null;
+    
+    const touchObj = this._getTouchFromPool();
+    if (!touchObj) return null;
+    
+    const currentTime = performance.now();
+    
+    touchObj.id = 'mouse';
+    touchObj.startX = coordinates.x;
+    touchObj.startY = coordinates.y;
+    touchObj.currentX = coordinates.x;
+    touchObj.currentY = coordinates.y;
+    touchObj.previousX = coordinates.x;
+    touchObj.previousY = coordinates.y;
+    touchObj.deltaX = 0;
+    touchObj.deltaY = 0;
+    touchObj.startTime = currentTime;
+    touchObj.lastMoveTime = currentTime;
+    touchObj.isActive = true;
+    touchObj.gestureData = {};
+    
+    return touchObj;
+  }
+
+  /**
+   * Get mouse coordinates relative to canvas
+   * @param {MouseEvent} event Mouse event
+   * @returns {Object|null} Coordinates {x, y} or null if invalid
+   * @private
+   */
+  _getMouseCoordinates(event) {
+    if (!this.canvas) return null;
+    
+    this._updateCanvasProperties();
+    
+    // Calculate coordinates relative to canvas
+    const x = (event.clientX - this.canvasOffset.x) / this.canvasScale;
+    const y = (event.clientY - this.canvasOffset.y) / this.canvasScale;
+    
+    // Validate coordinates are within canvas bounds
+    const canvasWidth = this.canvas.width || this.canvas.clientWidth;
+    const canvasHeight = this.canvas.height || this.canvas.clientHeight;
+    
+    if (x < 0 || x > canvasWidth || y < 0 || y > canvasHeight) {
+      return null;
+    }
+    
+    return { x, y };
+  }
+
+  /**
+   * Process mouse event as touch event
+   * @param {Object} mouseTouch Simulated touch object
+   * @param {string} phase Event phase: 'start', 'move', 'end'
+   * @private
+   */
+  _processMouseAsTouch(mouseTouch, phase) {
+    if (!mouseTouch) return;
+    
+    const currentTime = performance.now();
+    
+    try {
+      switch (phase) {
+        case 'start':
+          // Trigger haptic feedback for desktop mouse (if supported)
+          this.triggerHapticFeedback('light');
+          
+          // Setup long press detection
+          this._setupLongPressDetection(mouseTouch);
+          
+          // Emit touch start event
+          this._emit('touchStart', {
+            touches: [mouseTouch],
+            position: { x: mouseTouch.currentX, y: mouseTouch.currentY },
+            isSimulated: true
+          });
+          break;
+          
+        case 'move':
+          // Process movement
+          this._processTouchMove(mouseTouch);
+          
+          // Emit touch move event
+          this._emit('touchMove', {
+            touches: [mouseTouch],
+            position: { x: mouseTouch.currentX, y: mouseTouch.currentY },
+            delta: { x: mouseTouch.deltaX, y: mouseTouch.deltaY },
+            isSimulated: true
+          });
+          break;
+          
+        case 'end':
+          const duration = currentTime - mouseTouch.startTime;
+          const distance = Math.sqrt(
+            Math.pow(mouseTouch.currentX - mouseTouch.startX, 2) +
+            Math.pow(mouseTouch.currentY - mouseTouch.startY, 2)
+          );
+          
+          // Recognize gesture
+          const gesture = this._recognizeGesture(mouseTouch, duration, distance);
+          
+          if (gesture) {
+            this.lastGesture = gesture;
+            this._handleMouseGesture(gesture, mouseTouch);
+          }
+          
+          // Emit touch end event
+          this._emit('touchEnd', {
+            touches: [mouseTouch],
+            position: { x: mouseTouch.currentX, y: mouseTouch.currentY },
+            gesture,
+            isSimulated: true
+          });
+          break;
+      }
+    } catch (error) {
+      console.warn('Error processing mouse as touch:', error);
+    }
+  }
+
+  /**
+   * Handle mouse gesture recognition
+   * @param {Object} gesture Recognized gesture
+   * @param {Object} mouseTouch Mouse touch object
+   * @private
+   */
+  _handleMouseGesture(gesture, mouseTouch) {
+    const position = { x: mouseTouch.currentX, y: mouseTouch.currentY };
+    
+    switch (gesture.type) {
+      case 'tap':
+        this._handleTap(position);
+        break;
+        
+      case 'double-tap':
+        this._handleDoubleTap(position);
+        break;
+        
+      case 'swipe':
+        this._handleSwipe({
+          direction: gesture.direction,
+          distance: gesture.distance,
+          velocity: gesture.velocity,
+          startPosition: { x: mouseTouch.startX, y: mouseTouch.startY },
+          endPosition: position
+        });
+        break;
+        
+      case 'long-press':
+        this._handleLongPress(position);
+        break;
+        
+      default:
+        // Handle custom gestures
+        if (this.customGestures[gesture.type]) {
+          this.customGestures[gesture.type](gesture, position);
+        }
+        break;
+    }
+  }
+
+  // ===============================
   // CLEANUP
   // ===============================
 
@@ -936,11 +1225,24 @@ export class TouchController {
       this.canvas.removeEventListener('touchmove', this._handleTouchMove);
       this.canvas.removeEventListener('touchend', this._handleTouchEnd);
       this.canvas.removeEventListener('touchcancel', this._handleTouchCancel);
+      
+      // Remove mouse event listeners
+      this.canvas.removeEventListener('mousedown', this._handleMouseDown);
+      this.canvas.removeEventListener('mousemove', this._handleMouseMove);
+      this.canvas.removeEventListener('mouseup', this._handleMouseUp);
+      this.canvas.removeEventListener('mouseleave', this._handleMouseUp);
     }
     
     if (typeof window !== 'undefined') {
       window.removeEventListener('orientationchange', this._handleOrientationChange);
       window.removeEventListener('resize', this._handleOrientationChange);
+    }
+    
+    // Clear mouse state
+    this.mouseDown = false;
+    if (this.mouseTouch) {
+      this._returnTouchToPool(this.mouseTouch);
+      this.mouseTouch = null;
     }
     
     // Clear active touches
@@ -958,6 +1260,31 @@ export class TouchController {
     // Clear custom gestures
     this.customGestures = {};
     
+    // Clear all pending timers
+    this._clearAllTimers();
+    
     this._emit('destroyed', this);
+    
+    return this;
+  }
+  
+  /**
+   * Clear all pending timers
+   * @private
+   */
+  _clearAllTimers() {
+    // Clear orientation timer
+    if (this.orientationTimer) {
+      clearTimeout(this.orientationTimer);
+      this.orientationTimer = null;
+    }
+    
+    // Clear any touch-related timers
+    for (const touch of this.activeTouches.values()) {
+      if (touch.gestureData && touch.gestureData.longPressTimer) {
+        clearTimeout(touch.gestureData.longPressTimer);
+        touch.gestureData.longPressTimer = null;
+      }
+    }
   }
 } 

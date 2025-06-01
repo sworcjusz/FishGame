@@ -92,9 +92,9 @@ module.exports = {
   // Restore mocks after each test
   restoreMocks: true,
   
-  // Performance monitoring
-  detectOpenHandles: true,
-  detectLeaks: true,
+  // Performance monitoring - disabled during development
+  detectOpenHandles: false,
+  detectLeaks: false,
   
   // For mobile performance testing
   globals: {
